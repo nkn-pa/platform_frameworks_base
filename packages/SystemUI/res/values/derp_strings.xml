@@ -124,4 +124,8 @@
     <!-- Island notification -->
     <string name="now_playing_on">Now Playing on %1$s</string>
     <string name="by_artist">%1$s by %2$s</string>
+
+    <!-- DerpFest Tile -->
+    <string name="quick_derpfest_label">DerpFest</string>
+    <string name="quick_derpfest_toast">LOL, you really thought that long click will take you somewhere!!!</string>
 </resources>
