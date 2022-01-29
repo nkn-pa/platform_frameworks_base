@@ -168,7 +168,6 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
     private final NotificationIconContainerStatusBarViewBinder mNicViewBinder;
     private final DemoModeController mDemoModeController;
 
-<<<<<<< HEAD
     private AdvertSwitcherView mAdvertSwitcherView;
     private AdvertTickerView mAdvertTickerView;
     private boolean mLastAdvertTickerViewShow;
@@ -180,6 +179,8 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
     private View mRightClock;
     private int mClockStyle;
     private boolean mShowClock = true;
+
+    private View mLeftLogo;
 
     private final class SettingsObserver extends ContentObserver {
 
@@ -205,11 +206,6 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
             updateSettings(true);
         }
     }
-=======
-    private ClockController mClockController;
-    private PhoneStatusBarViewController mStatusBarViewController;
-    private View mLeftLogo;
->>>>>>> b8735d90db4e (Custom statusbar logo customizations [1/2])
 
     private List<String> mBlockedIcons = new ArrayList<>();
     private Map<Startable, Startable.State> mStartableStates = new ArrayMap<>();
