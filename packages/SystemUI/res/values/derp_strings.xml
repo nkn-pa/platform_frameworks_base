@@ -128,4 +128,8 @@
     <!-- DerpFest Tile -->
     <string name="quick_derpfest_label">DerpFest</string>
     <string name="quick_derpfest_toast">LOL, you really thought that long click will take you somewhere!!!</string>
+
+    <!-- Refresh rate QS tile -->
+    <string name="refresh_rate_tile_label">Refresh rate</string>
+    <string name="refresh_rate_unknown">Unknown</string>
 </resources>
