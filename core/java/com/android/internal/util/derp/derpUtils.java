@@ -18,11 +18,14 @@
 package com.android.internal.util.derp;
 
 import android.app.ActivityManager;
+import android.app.IActivityManager;
 import android.app.role.RoleManager;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.os.AsyncTask;
+import android.os.RemoteException;
 import android.os.UserHandle;
 
 import com.android.internal.util.CollectionUtils;
@@ -72,5 +75,36 @@ public class derpUtils {
         try {
             activityManager.forceStopPackageAsUser(getDefaultLauncher(context), UserHandle.USER_CURRENT);
         } catch (Exception ignored) {}
+    }
+
+    public static void restartSystemUi(Context context) {
+        new RestartSystemUiTask(context).execute();
+    }
+
+    private static class RestartSystemUiTask extends AsyncTask<Void, Void, Void> {
+
+        private final Context mContext;
+
+        public RestartSystemUiTask(Context context) {
+            super();
+            mContext = context;
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            try {
+                final ActivityManager am = mContext.getSystemService(ActivityManager.class);
+                final IActivityManager ams = ActivityManager.getService();
+                for (ActivityManager.RunningAppProcessInfo app : am.getRunningAppProcesses()) {
+                    if ("com.android.systemui".equals(app.processName)) {
+                        ams.killApplicationProcess(app.processName, app.uid);
+                        break;
+                    }
+                }
+            } catch (RemoteException e) {
+                // do nothing.
+            }
+            return null;
+        }
     }
 }

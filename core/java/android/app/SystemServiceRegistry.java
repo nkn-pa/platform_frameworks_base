@@ -292,6 +292,8 @@ import com.android.internal.util.Preconditions;
 
 import org.derpfest.display.IRefreshRateManagerService;
 import org.derpfest.display.RefreshRateManager;
+import org.derpfest.view.DisplayResolutionManager;
+import org.derpfest.view.IDisplayResolutionManagerService;
 
 import java.time.InstantSource;
 import java.util.HashMap;
@@ -1826,6 +1828,15 @@ public final class SystemServiceRegistry {
                         return new IntrusionDetectionManager(service);
                     }
                 });
+
+        registerService(Context.DISPLAY_RESOLUTION_MANAGER_SERVICE, DisplayResolutionManager.class,
+                new CachedServiceFetcher<DisplayResolutionManager>() {
+            @Override
+            public DisplayResolutionManager createService(ContextImpl ctx) {
+                IBinder binder = ServiceManager.getService(Context.DISPLAY_RESOLUTION_MANAGER_SERVICE);
+                IDisplayResolutionManagerService service = IDisplayResolutionManagerService.Stub.asInterface(binder);
+                return new DisplayResolutionManager(ctx.getOuterContext(), service);
+            }});
 
         registerService(Context.REFRESH_RATE_MANAGER_SERVICE, RefreshRateManager.class,
                 new CachedServiceFetcher<RefreshRateManager>() {
