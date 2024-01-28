@@ -17,6 +17,7 @@
 package com.android.systemui.statusbar.phone;
 
 import static com.android.systemui.statusbar.phone.fragment.dagger.HomeStatusBarModule.OPERATOR_NAME_FRAME_VIEW;
+import static com.android.systemui.statusbar.policy.Clock.STYLE_CLOCK_LEFT;
 
 import android.graphics.Rect;
 import android.util.MathUtils;
@@ -92,6 +93,7 @@ public class HeadsUpAppearanceController extends ViewController<HeadsUpStatusBar
 
     private final View mClockView;
     private final Optional<View> mOperatorNameViewOptional;
+    private final PhoneStatusBarViewController mPhoneStatusBarViewController;
 
     @VisibleForTesting
     float mExpandedHeight;
@@ -125,12 +127,13 @@ public class HeadsUpAppearanceController extends ViewController<HeadsUpStatusBar
             ShadeViewController shadeViewController,
             NotificationRoundnessManager notificationRoundnessManager,
             HeadsUpStatusBarView headsUpStatusBarView,
-            Clock clockView,
+            PhoneStatusBarViewController phoneStatusBarViewController,
             HeadsUpNotificationIconInteractor headsUpNotificationIconInteractor,
             @Named(OPERATOR_NAME_FRAME_VIEW) Optional<View> operatorNameViewOptional) {
         super(headsUpStatusBarView);
         mNotificationRoundnessManager = notificationRoundnessManager;
         mHeadsUpManager = headsUpManager;
+        mPhoneStatusBarViewController = phoneStatusBarViewController;
 
         // We may be mid-HUN-expansion when this controller is re-created (for example, if the user
         // has started pulling down the notification shade from the HUN and then the font size
@@ -145,7 +148,7 @@ public class HeadsUpAppearanceController extends ViewController<HeadsUpStatusBar
         mShadeViewController = shadeViewController;
         mHeadsUpNotificationIconInteractor = headsUpNotificationIconInteractor;
         mStackScrollerController.setHeadsUpAppearanceController(this);
-        mClockView = clockView;
+        mClockView = phoneStatusBarViewController.getClockView();
         mOperatorNameViewOptional = operatorNameViewOptional;
         mDarkIconDispatcher = darkIconDispatcher;
 
@@ -255,7 +258,12 @@ public class HeadsUpAppearanceController extends ViewController<HeadsUpStatusBar
                 mOperatorNameViewOptional.ifPresent(view -> hide(view, View.INVISIBLE));
             } else {
                 if (!StatusBarRootModernization.isEnabled()) {
-                    show(mClockView);
+                    Clock clockView = (Clock) mClockView;
+                    if (clockView.getClockStyle() == STYLE_CLOCK_LEFT && clockView.getShowClock()) {
+                        show(mClockView);
+                    } else {
+                        mClockView.setVisibility(View.GONE);
+                    }
                 }
                 mOperatorNameViewOptional.ifPresent(this::show);
                 hide(mView, View.GONE, () -> {

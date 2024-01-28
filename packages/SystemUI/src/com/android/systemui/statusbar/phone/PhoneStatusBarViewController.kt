@@ -44,6 +44,7 @@ import com.android.systemui.shade.domain.interactor.PanelExpansionInteractor
 import com.android.systemui.shade.shared.flag.ShadeWindowGoesAround
 import com.android.systemui.shared.animation.UnfoldMoveFromCenterAnimator
 import com.android.systemui.statusbar.data.repository.StatusBarContentInsetsProviderStore
+import com.android.systemui.statusbar.phone.fragment.StatusBarVisibilityModel
 import com.android.systemui.statusbar.policy.Clock
 import com.android.systemui.statusbar.policy.ConfigurationController
 import com.android.systemui.statusbar.window.StatusBarWindowStateController
@@ -61,6 +62,10 @@ import javax.inject.Named
 import javax.inject.Provider
 
 private const val TAG = "PhoneStatusBarViewController"
+
+private const val STYLE_CLOCK_LEFT = 0
+private const val STYLE_CLOCK_CENTER = 1
+private const val STYLE_CLOCK_RIGHT = 2
 
 /** Controller for [PhoneStatusBarView]. */
 class PhoneStatusBarViewController
@@ -87,8 +92,12 @@ private constructor(
 
     private lateinit var battery: BatteryMeterView
     private lateinit var clock: Clock
+    private lateinit var centerClock: Clock
+    private lateinit var rightClock: Clock
     private lateinit var startSideContainer: View
     private lateinit var endSideContainer: View
+
+    private var mClockStyle = STYLE_CLOCK_LEFT
 
     private val iconsOnTouchListener =
         object : View.OnTouchListener {
@@ -118,6 +127,8 @@ private constructor(
 
     override fun onViewAttached() {
         clock = mView.requireViewById(R.id.clock)
+        centerClock = mView.requireViewById(R.id.center_clock)
+        rightClock = mView.requireViewById(R.id.right_clock)
         battery = mView.requireViewById(R.id.battery)
         addDarkReceivers()
         addCursorSupportToIconContainers()
@@ -238,11 +249,41 @@ private constructor(
     private fun addDarkReceivers() {
         darkIconDispatcher.addDarkReceiver(battery)
         darkIconDispatcher.addDarkReceiver(clock)
+        darkIconDispatcher.addDarkReceiver(centerClock)
+        darkIconDispatcher.addDarkReceiver(rightClock)
+    }
+
+    fun getClockView(): View {
+        // Return the currently visible clock based on the clock style
+        return when (mClockStyle) {
+            STYLE_CLOCK_CENTER -> centerClock
+            STYLE_CLOCK_RIGHT -> rightClock
+            else -> clock
+        }
+    }
+
+    fun updateClockStyle(style: Int, animate: Boolean = true) {
+        if (mClockStyle == style) return
+        mClockStyle = style
+
+        // Hide all clocks first
+        clock.visibility = View.GONE
+        centerClock.visibility = View.GONE
+        rightClock.visibility = View.GONE
+
+        // Show the selected clock
+        when (style) {
+            STYLE_CLOCK_CENTER -> centerClock.visibility = View.VISIBLE
+            STYLE_CLOCK_RIGHT -> rightClock.visibility = View.VISIBLE
+            else -> clock.visibility = View.VISIBLE
+        }
     }
 
     private fun removeDarkReceivers() {
         darkIconDispatcher.removeDarkReceiver(battery)
         darkIconDispatcher.removeDarkReceiver(clock)
+        darkIconDispatcher.removeDarkReceiver(centerClock)
+        darkIconDispatcher.removeDarkReceiver(rightClock)
     }
 
     inner class PhoneStatusBarViewTouchHandler : Gefingerpoken {
