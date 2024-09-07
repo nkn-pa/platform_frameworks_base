@@ -872,6 +872,7 @@ public class WindowManagerService extends IWindowManager.Stub
                     UserHandle.USER_ALL);
             resolver.registerContentObserver(mMaximumObscuringOpacityForTouchUri, false, this,
                     UserHandle.USER_ALL);
+            WindowManagerServiceExt.getInstance().registerContentObserver(this);
         }
 
         @Override
@@ -920,6 +921,10 @@ public class WindowManagerService extends IWindowManager.Stub
                 return;
             }
 
+            if (WindowManagerServiceExt.getInstance().onSettingsChanged(uri)) {
+                return;
+            }
+
             @UpdateAnimationScaleMode
             final int mode;
             if (mWindowAnimationScaleUri.equals(uri)) {
@@ -940,6 +945,7 @@ public class WindowManagerService extends IWindowManager.Stub
             updateSystemUiSettings(false /* handleChange */);
             updateMaximumObscuringOpacityForTouch();
             updateDisableSecureWindows();
+            WindowManagerServiceExt.getInstance().loadSettings();
         }
 
         void updateMaximumObscuringOpacityForTouch() {
@@ -1419,6 +1425,8 @@ public class WindowManagerService extends IWindowManager.Stub
         mContext.registerReceiverAsUser(mBroadcastReceiver, UserHandle.ALL, filter, null, null);
 
         mLatencyTracker = LatencyTracker.getInstance(context);
+
+        WindowManagerServiceExt.getInstance().init(this);
 
         mSettingsObserver = new SettingsObserver();
 
@@ -3297,6 +3305,7 @@ public class WindowManagerService extends IWindowManager.Stub
     @Override
     public void onUserSwitched() {
         mSettingsObserver.updateSystemUiSettings(true /* handleChange */);
+        WindowManagerServiceExt.getInstance().onUserSwitched();
         synchronized (mGlobalLock) {
             // force a re-application of focused window sysui visibility on each display.
             mRoot.forAllDisplayPolicies(DisplayPolicy::resetSystemBarAttributes);
@@ -5582,6 +5591,8 @@ public class WindowManagerService extends IWindowManager.Stub
                 // Ignore, we cannot do anything if we failed to register VR mode listener
             }
         }
+
+        WindowManagerServiceExt.getInstance().systemReady();
     }
 
 
