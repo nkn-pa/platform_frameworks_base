@@ -84,6 +84,7 @@ import com.android.systemui.statusbar.pipeline.shared.ui.binder.HomeStatusBarVie
 import com.android.systemui.statusbar.pipeline.shared.ui.binder.StatusBarVisibilityChangeListener;
 import com.android.systemui.statusbar.pipeline.shared.ui.viewmodel.HomeStatusBarViewModel;
 import com.android.systemui.statusbar.policy.Clock;
+import com.android.systemui.statusbar.policy.ClockCenter;
 import com.android.systemui.statusbar.policy.KeyguardStateController;
 import com.android.systemui.statusbar.window.StatusBarWindowStateController;
 import com.android.systemui.statusbar.window.StatusBarWindowStateListener;
@@ -105,6 +106,9 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 
 import javax.inject.Inject;
+
+import org.sun.systemui.statusbar.ticker.AdvertSwitcherView;
+import org.sun.systemui.statusbar.ticker.AdvertTickerView;
 
 /**
  * Contains the collapsed status bar and handles hiding/showing based on disable flags
@@ -163,6 +167,10 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
     private final KeyguardUpdateMonitor mKeyguardUpdateMonitor;
     private final NotificationIconContainerStatusBarViewBinder mNicViewBinder;
     private final DemoModeController mDemoModeController;
+
+    private AdvertSwitcherView mAdvertSwitcherView;
+    private AdvertTickerView mAdvertTickerView;
+    private boolean mLastAdvertTickerViewShow;
 
     private ContentResolver mContentResolver;
     private SettingsObserver mSettingsObserver;
@@ -418,6 +426,11 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
         mCarrierConfigTracker.addCallback(mCarrierConfigCallback);
         mCarrierConfigTracker.addDefaultDataSubscriptionChangedListener(mDefaultDataListener);
 
+        mAdvertTickerView = (AdvertTickerView) mStatusBar.findViewById(R.id.ticker_ext);
+        mAdvertSwitcherView = (AdvertSwitcherView) mStatusBar.findViewById(R.id.status_bar_switcher);
+        mAdvertSwitcherView.setCallBack(show -> updateStatusBarVisibilities(/* animate= */ false));
+        mAdvertSwitcherView.setCenterClockView((ClockCenter) mStatusBar.findViewById(R.id.center_clock));
+
         mContentResolver = getContext().getContentResolver();
         mSettingsObserver = new SettingsObserver(new Handler());
         mSettingsObserver.register();
@@ -640,9 +653,12 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
                 newModel.getShowNotificationIcons() != previousModel.getShowNotificationIcons();
         boolean ongoingActivityChanged =
                 newModel.isOngoingActivityStatusDifferentFrom(previousModel);
-        if (notifsChanged || ongoingActivityChanged) {
+        boolean advertTickerViewShow = getAdvertSwitcherShow();
+        if (notifsChanged || ongoingActivityChanged || advertTickerViewShow != mLastAdvertTickerViewShow) {
             updateNotificationIconAreaAndOngoingActivityChip(animate);
         }
+
+        mLastAdvertTickerViewShow = advertTickerViewShow;
     }
 
     private StatusBarVisibilityModel calculateInternalModel(
@@ -706,11 +722,15 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
         StatusBarVisibilityModel visibilityModel = mLastModifiedVisibility;
         boolean disableNotifications = !visibilityModel.getShowNotificationIcons();
         boolean hasOngoingActivity = visibilityModel.getShowPrimaryOngoingActivityChip();
+        boolean advertTickerShow = getAdvertSwitcherShow();
 
         // Hide notifications if the disable flag is set or we have an ongoing activity.
         if (disableNotifications || hasOngoingActivity) {
             hideNotificationIconArea(animate && !hasOngoingActivity);
+            hideLyricsTicker(animate);
             animateHide(mClockView, animate, false);
+        } else if (advertTickerShow) {
+            showLyricsTicker(animate);
         } else {
             showNotificationIconArea(animate);
             updateClockStyle(animate);
@@ -1020,6 +1040,25 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
             mEndSideContent.setTranslationX(translationX);
             return Unit.INSTANCE;
         }, /*isAnimationRunning*/ false);
+    }
+
+    private void hideLyricsTicker(boolean animate) {
+        if (mAdvertTickerView != null) {
+            animateHiddenState(mAdvertTickerView, View.INVISIBLE, animate);
+        }
+    }
+
+    private void showLyricsTicker(boolean animate) {
+        if (getAdvertSwitcherShow()) {
+            animateShow(mAdvertTickerView, animate);
+        }
+    }
+
+    private boolean getAdvertSwitcherShow() {
+        if (mAdvertSwitcherView == null) {
+            return false;
+        }
+        return mAdvertSwitcherView.isShow();
     }
 
     private void updateSettings(boolean animate) {

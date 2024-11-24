@@ -17,6 +17,7 @@ package com.android.systemui.statusbar.phone
 
 import android.app.StatusBarManager.WINDOW_STATUS_BAR
 import android.graphics.Point
+import android.graphics.Rect
 import android.util.Log
 import android.view.InputDevice
 import android.view.MotionEvent
@@ -96,6 +97,10 @@ private constructor(
     private lateinit var rightClock: Clock
     private lateinit var startSideContainer: View
     private lateinit var endSideContainer: View
+    private var tickerView: View? = null
+    private var mLastAdvertTickerViewShow = false
+    private lateinit var mLastModifiedVisibility: StatusBarVisibilityModel
+    private lateinit var mLastSystemVisibility: StatusBarVisibilityModel
 
     private var mClockStyle = STYLE_CLOCK_LEFT
 
@@ -286,6 +291,20 @@ private constructor(
         darkIconDispatcher.removeDarkReceiver(rightClock)
     }
 
+    fun setTickerView(view: View) {
+        tickerView = view
+    }
+
+    fun setDisplayToTicker(rect: Rect) {
+        tickerView?.let { view ->
+            view.x = rect.left.toFloat()
+            view.y = rect.top.toFloat()
+            view.layoutParams.width = rect.width()
+            view.layoutParams.height = rect.height()
+            view.requestLayout()
+        }
+    }
+
     inner class PhoneStatusBarViewTouchHandler : Gefingerpoken {
         override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
             return if (Flags.statusBarSwipeOverChip()) {
@@ -423,5 +442,66 @@ private constructor(
                 lazyStatusBarShadeDisplayPolicy,
             )
         }
+    }
+
+    private fun updateStatusBarVisibilities(animate: Boolean) {
+        StatusBarRootModernization.assertInLegacyMode()
+
+        val previousModel = mLastModifiedVisibility
+        val newModel = calculateInternalModel(mLastSystemVisibility)
+        mCollapsedStatusBarFragmentLogger.logVisibilityModel(newModel)
+        mLastModifiedVisibility = newModel
+
+        if (newModel.getShowSystemInfo() != previousModel.getShowSystemInfo()) {
+            if (newModel.getShowSystemInfo()) {
+                showEndSideContent(animate)
+                showOperatorName(animate)
+            } else {
+                hideEndSideContent(animate)
+                hideOperatorName(animate)
+            }
+        }
+
+        // The ongoing activity chip and notification icon visibilities are intertwined, so update
+        // both if either change.
+        val notifsChanged =
+                newModel.getShowNotificationIcons() != previousModel.getShowNotificationIcons()
+        val ongoingActivityChanged =
+                newModel.isOngoingActivityStatusDifferentFrom(previousModel)
+        val advertTickerViewShow = getAdvertSwitcherShow()
+        if (notifsChanged || ongoingActivityChanged || advertTickerViewShow != mLastAdvertTickerViewShow) {
+            updateNotificationIconAreaAndOngoingActivityChip(animate)
+        }
+
+        mLastAdvertTickerViewShow = advertTickerViewShow
+    }
+
+    private fun getAdvertSwitcherShow(): Boolean {
+        return tickerView?.visibility == View.VISIBLE
+    }
+
+    private fun calculateInternalModel(systemModel: StatusBarVisibilityModel): StatusBarVisibilityModel {
+        // TODO: Implement proper model calculation
+        return systemModel
+    }
+
+    private fun showEndSideContent(animate: Boolean) {
+        endSideContainer.visibility = View.VISIBLE
+    }
+
+    private fun hideEndSideContent(animate: Boolean) {
+        endSideContainer.visibility = View.GONE
+    }
+
+    private fun showOperatorName(animate: Boolean) {
+        // TODO: Implement operator name visibility
+    }
+
+    private fun hideOperatorName(animate: Boolean) {
+        // TODO: Implement operator name visibility
+    }
+
+    private fun updateNotificationIconAreaAndOngoingActivityChip(animate: Boolean) {
+        // TODO: Implement notification area update
     }
 }

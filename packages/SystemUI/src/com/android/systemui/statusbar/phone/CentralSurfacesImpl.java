@@ -167,6 +167,7 @@ import com.android.systemui.settings.brightness.BrightnessSliderController;
 import com.android.systemui.settings.brightness.domain.interactor.BrightnessMirrorShowingInteractor;
 import com.android.systemui.shade.CameraLauncher;
 import com.android.systemui.shade.GlanceableHubContainerController;
+import com.android.systemui.shade.NotificationPanelViewController;
 import com.android.systemui.shade.NotificationShadeWindowView;
 import com.android.systemui.shade.NotificationShadeWindowViewController;
 import com.android.systemui.shade.QuickSettingsController;
@@ -207,7 +208,9 @@ import com.android.systemui.statusbar.data.repository.StatusBarModeRepositorySto
 import com.android.systemui.statusbar.notification.NotificationActivityStarter;
 import com.android.systemui.statusbar.notification.NotificationLaunchAnimatorControllerProvider;
 import com.android.systemui.statusbar.notification.NotificationWakeUpCoordinator;
+import com.android.systemui.statusbar.notification.collection.NotifPipeline;
 import com.android.systemui.statusbar.notification.init.NotificationsController;
+import com.android.systemui.statusbar.notification.interruption.NotificationInterruptStateProvider;
 import com.android.systemui.statusbar.notification.row.ExpandableNotificationRow;
 import com.android.systemui.statusbar.notification.row.NotificationGutsManager;
 import com.android.systemui.statusbar.notification.stack.NotificationListContainer;
@@ -401,11 +404,14 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
     private final KeyguardBypassController mKeyguardBypassController;
     private final KeyguardStateController mKeyguardStateController;
     private final HeadsUpManager mHeadsUpManager;
+    private final HeadsUpManagerPhone mHeadsUpManagerPhone;
     private final ShadeTouchableRegionManager mShadeTouchableRegionManager;
     private final FalsingCollector mFalsingCollector;
     private final FalsingManager mFalsingManager;
     private final BroadcastDispatcher mBroadcastDispatcher;
     private final ConfigurationController mConfigurationController;
+    private final Lazy<NotificationPanelViewController>
+            mNotificationPanelViewControllerLazy;
     private final Lazy<NotificationShadeWindowViewController>
             mNotificationShadeWindowViewControllerLazy;
     private final DozeParameters mDozeParameters;
@@ -437,6 +443,7 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
 
     private View mReportRejectedTouch;
 
+    private final NotifPipeline mNotifPipeline;
     private final NotificationGutsManager mGutsManager;
     private final ShadeExpansionStateManager mShadeExpansionStateManager;
     private final KeyguardViewMediator mKeyguardViewMediator;
@@ -540,6 +547,7 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
     protected final BatteryController mBatteryController;
     private UiModeManager mUiModeManager;
     private LogMaker mStatusBarStateLog;
+    private final NotificationInterruptStateProvider mNotificationInterruptStateProvider;
     @Nullable private View mAmbientIndicationContainer;
     private final SysuiColorExtractor mColorExtractor;
     private final ScreenLifecycle mScreenLifecycle;
@@ -617,9 +625,11 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
             KeyguardBypassController keyguardBypassController,
             KeyguardStateController keyguardStateController,
             HeadsUpManager headsUpManager,
+            HeadsUpManagerPhone headsUpManagerPhone,
             FalsingManager falsingManager,
             FalsingCollector falsingCollector,
             BroadcastDispatcher broadcastDispatcher,
+            NotifPipeline notifPipeline,
             NotificationGutsManager notificationGutsManager,
             ShadeExpansionStateManager shadeExpansionStateManager,
             KeyguardViewMediator keyguardViewMediator,
@@ -650,6 +660,7 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
             //  the one for other windows.
             ConfigurationController configurationController,
             NotificationShadeWindowController notificationShadeWindowController,
+            Lazy<NotificationPanelViewController> notificationPanelViewControllerLazy,
             Lazy<NotificationShadeWindowViewController> notificationShadeWindowViewControllerLazy,
             NotificationStackScrollLayoutController notificationStackScrollLayoutController,
             // Lazys due to b/298099682.
@@ -682,6 +693,7 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
             DemoModeController demoModeController,
             Lazy<NotificationShadeDepthController> notificationShadeDepthControllerLazy,
             ShadeTouchableRegionManager shadeTouchableRegionManager,
+            NotificationInterruptStateProvider notificationInterruptStateProvider,
             BrightnessSliderController.Factory brightnessSliderFactory,
             ScreenOffAnimationController screenOffAnimationController,
             WallpaperController wallpaperController,
@@ -722,12 +734,14 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
         mKeyguardBypassController = keyguardBypassController;
         mKeyguardStateController = keyguardStateController;
         mHeadsUpManager = headsUpManager;
+        mHeadsUpManagerPhone = headsUpManagerPhone;
         mBackActionInteractor = backActionInteractor;
         mKeyguardIndicationController = keyguardIndicationController;
         mShadeTouchableRegionManager = shadeTouchableRegionManager;
         mFalsingCollector = falsingCollector;
         mFalsingManager = falsingManager;
         mBroadcastDispatcher = broadcastDispatcher;
+        mNotifPipeline = notifPipeline;
         mGutsManager = notificationGutsManager;
         mShadeExpansionStateManager = shadeExpansionStateManager;
         mKeyguardViewMediator = keyguardViewMediator;
@@ -755,6 +769,7 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
         mAccessibilityFloatingMenuController = accessibilityFloatingMenuController;
         mAssistManagerLazy = assistManagerLazy;
         mConfigurationController = configurationController;
+        mNotificationPanelViewControllerLazy = notificationPanelViewControllerLazy;
         mNotificationShadeWindowController = notificationShadeWindowController;
         mNotificationShadeWindowViewControllerLazy = notificationShadeWindowViewControllerLazy;
         mStackScrollerController = notificationStackScrollLayoutController;
@@ -785,6 +800,7 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
         mUserInfoControllerImpl = userInfoControllerImpl;
         mIconPolicy = phoneStatusBarPolicy;
         mDemoModeController = demoModeController;
+        mNotificationInterruptStateProvider = notificationInterruptStateProvider;
         mBrightnessSliderFactory = brightnessSliderFactory;
         mWallpaperController = wallpaperController;
         mStatusBarSignalPolicy = statusBarSignalPolicy;
@@ -1174,7 +1190,10 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
     // ================================================================================
     protected void makeStatusBarView(@Nullable RegisterStatusBarResult result) {
         CentralSurfacesImplExt.getInstance().init(this, mContext,
-                mStatusBarWindowController);
+                mDemoModeController, mDeviceProvisionedController,
+                mHeadsUpManagerPhone, mKeyguardStateController,
+                mNotifPipeline, mNotificationInterruptStateProvider,
+                mLockscreenUserManager, mStatusBarWindowController);
 
         updateDisplaySize(); // populates mDisplayMetrics
         updateResources();
@@ -1227,6 +1246,7 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
                         mShadeSurface.updateExpansionAndVisibility();
                         setBouncerShowingForStatusBarComponents(mBouncerShowing);
                         checkBarModes();
+                        CentralSurfacesImplExt.getInstance().initTicker(mStatusBarView);
                     });
         }
         if (!StatusBarRootModernization.isEnabled() && !StatusBarConnectedDisplays.isEnabled()) {
@@ -1542,6 +1562,10 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
         mNotificationShadeWindowController.fetchWindowRootView();
         getNotificationShadeWindowViewController().setupExpandedStatusBar();
         getNotificationShadeWindowViewController().setupCommunalHubLayout();
+    }
+
+    protected NotificationPanelViewController getNotificationPanelViewController() {
+        return mNotificationPanelViewControllerLazy.get();
     }
 
     protected NotificationShadeWindowViewController getNotificationShadeWindowViewController() {
@@ -2598,6 +2622,8 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
             }
 
             DejankUtils.stopDetectingBlockingIpcs(tag);
+
+            CentralSurfacesImplExt.getInstance().tickerHalt();
         }
 
         @Override
@@ -2964,6 +2990,10 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
         });
     }
 
+    protected int getDisabled1() {
+        return mCommandQueueCallbacks.getDisabled1();
+    }
+
     protected void toggleKeyboardShortcuts(int deviceId) {
         if (shouldUseTabletKeyboardShortcuts()) {
             KeyboardShortcutListSearch.toggle(mContext, deviceId);
@@ -3252,6 +3282,11 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
             };
 
     private final DemoMode mDemoModeCallback = new DemoMode() {
+        @Override
+        public void onDemoModeStarted() {
+            CentralSurfacesImplExt.getInstance().tickerHalt();
+        }
+        
         @Override
         public void onDemoModeFinished() {
             checkBarModes();

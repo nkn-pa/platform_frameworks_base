@@ -574,6 +574,10 @@ public class CentralSurfacesCommandQueueCallbacks implements CommandQueue.Callba
         return VibrationEffect.createWaveform(timings, /* repeat= */ -1);
     }
 
+    int getDisabled1() {
+        return mDisabled1;
+    }
+
     @VisibleForTesting
     void vibrateOnNavigationKeyDown() {
         mShadeController.performHapticFeedback(
