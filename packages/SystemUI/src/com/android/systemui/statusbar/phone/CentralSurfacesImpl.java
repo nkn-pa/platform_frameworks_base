@@ -255,6 +255,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 
+import org.sun.systemui.statusbar.ticker.TickerController;
+
 /**
  * A class handling initialization and coordination between some of the key central surfaces in
  * System UI: The notification shade, the keyguard (lockscreen), and the status bar.
@@ -451,6 +453,7 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
     private final FeatureFlags mFeatureFlags;
     private final FragmentService mFragmentService;
     private final ScreenOffAnimationController mScreenOffAnimationController;
+    private final TickerController mTickerController;
     private final WallpaperController mWallpaperController;
     private final KeyguardUnlockAnimationController mKeyguardUnlockAnimationController;
     private final MessageRouter mMessageRouter;
@@ -632,6 +635,7 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
             NotifPipeline notifPipeline,
             NotificationGutsManager notificationGutsManager,
             ShadeExpansionStateManager shadeExpansionStateManager,
+            TickerController tickerController,
             KeyguardViewMediator keyguardViewMediator,
             DisplayMetrics displayMetrics,
             MetricsLogger metricsLogger,
@@ -744,6 +748,7 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
         mNotifPipeline = notifPipeline;
         mGutsManager = notificationGutsManager;
         mShadeExpansionStateManager = shadeExpansionStateManager;
+        mTickerController = tickerController;
         mKeyguardViewMediator = keyguardViewMediator;
         mDisplayMetrics = displayMetrics;
         mMetricsLogger = metricsLogger;
@@ -1193,7 +1198,8 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
                 mDemoModeController, mDeviceProvisionedController,
                 mHeadsUpManagerPhone, mKeyguardStateController,
                 mNotifPipeline, mNotificationInterruptStateProvider,
-                mLockscreenUserManager, mStatusBarWindowController);
+                mLockscreenUserManager, mStatusBarWindowController,
+                mTickerController);
 
         updateDisplaySize(); // populates mDisplayMetrics
         updateResources();
