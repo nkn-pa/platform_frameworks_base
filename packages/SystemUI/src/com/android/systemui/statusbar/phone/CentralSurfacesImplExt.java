@@ -32,6 +32,7 @@ import com.android.systemui.statusbar.window.StatusBarWindowController;
 import org.sun.systemui.statusbar.ticker.AdvertSwitcherView;
 import org.sun.systemui.statusbar.ticker.MarqueeTickerEx;
 import org.sun.systemui.statusbar.ticker.MarqueeTickerView;
+import org.sun.systemui.statusbar.ticker.TickerController;
 import org.sun.systemui.statusbar.ticker.TickerEx;
 
 class CentralSurfacesImplExt {
@@ -58,6 +59,7 @@ class CentralSurfacesImplExt {
     private NotificationInterruptStateProvider mNotificationInterruptStateProvider;
     private NotificationLockscreenUserManager mLockscreenUserManager;
     private StatusBarWindowController mStatusBarWindowController;
+    private TickerController mTickerController;
 
     private AdvertSwitcherView mSwitcherView;
     private MarqueeTickerEx mTicker;
@@ -71,7 +73,8 @@ class CentralSurfacesImplExt {
             NotifPipeline notifPipeline,
             NotificationInterruptStateProvider notificationInterruptStateProvider,
             NotificationLockscreenUserManager lockscreenUserManager,
-            StatusBarWindowController statusBarWindowController) {
+            StatusBarWindowController statusBarWindowController,
+            TickerController tickerController) {
         mCentralSurfacesImpl = centralSurfacesImpl;
         mContext = context;
         mDemoModeController = demoModeController;
@@ -82,12 +85,16 @@ class CentralSurfacesImplExt {
         mNotifPipeline = notifPipeline;
         mNotificationInterruptStateProvider = notificationInterruptStateProvider;
         mStatusBarWindowController = statusBarWindowController;
+        mTickerController = tickerController;
     }
 
     private void initEntryListener() {
         mNotifCollectionListener = new NotifCollectionListener() {
             @Override
             public void onEntryAdded(@NonNull NotificationEntry entry) {
+                if (!mTickerController.showNotificationTicker()) {
+                    return;
+                }
                 if (shouldFilterHeadsUpNotification(entry)) {
                     return;
                 }
@@ -96,6 +103,9 @@ class CentralSurfacesImplExt {
 
             @Override
             public void onEntryUpdated(@NonNull NotificationEntry entry) {
+                if (!mTickerController.showNotificationTicker()) {
+                    return;
+                }
                 if (mDemoModeController.isInDemoMode()) {
                     return;
                 }
