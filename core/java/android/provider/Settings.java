@@ -6817,6 +6817,12 @@ public final class Settings {
         public static final String STATUS_BAR_NOTIFICATION_TICKER = "status_bar_notification_ticker";
 
         /**
+         * App blacklist of showing status bar notification ticker
+         * @hide
+         */
+        public static final String STATUS_BAR_NOTIFICATION_TICKER_BLACKLIST = "status_bar_notification_ticker_blacklist";
+
+        /**
          * Ramping ringer total duration in seconds
          * @hide
          */
