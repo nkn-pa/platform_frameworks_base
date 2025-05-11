@@ -38,7 +38,7 @@ class TickerController @Inject constructor(
         val settingsObserver = object : ContentObserver(mainHandler) {
             override fun onChange(selfChange: Boolean, uri: Uri?) {
                 when (uri?.lastPathSegment) {
-                    STATUS_BAR_NOTIFICATION_TICKER -> updateNotificationTicker(true)
+                    Settings.System.STATUS_BAR_NOTIFICATION_TICKER -> updateNotificationTicker(true)
                 }
             }
         }
@@ -60,7 +60,7 @@ class TickerController @Inject constructor(
     }
 
     private fun updateNotificationTicker(notifyChange: Boolean) {
-        notificationTicker = systemSettings.getIntForUser(STATUS_BAR_NOTIFICATION_TICKER,
+        notificationTicker = systemSettings.getIntForUser(Settings.System.STATUS_BAR_NOTIFICATION_TICKER,
                 1, userTracker.userId) == 1
         if (notifyChange) {
             notifySettingsChanged()

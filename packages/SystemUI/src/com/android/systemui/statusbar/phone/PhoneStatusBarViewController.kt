@@ -45,6 +45,7 @@ import com.android.systemui.shade.domain.interactor.PanelExpansionInteractor
 import com.android.systemui.shade.shared.flag.ShadeWindowGoesAround
 import com.android.systemui.shared.animation.UnfoldMoveFromCenterAnimator
 import com.android.systemui.statusbar.data.repository.StatusBarContentInsetsProviderStore
+import com.android.systemui.statusbar.phone.fragment.CollapsedStatusBarFragmentLogger
 import com.android.systemui.statusbar.phone.fragment.StatusBarVisibilityModel
 import com.android.systemui.statusbar.policy.Clock
 import com.android.systemui.statusbar.policy.ConfigurationController
@@ -56,6 +57,7 @@ import com.android.systemui.user.ui.viewmodel.StatusBarUserChipViewModel
 import com.android.systemui.util.ViewController
 import com.android.systemui.util.kotlin.getOrNull
 import com.android.systemui.util.view.ViewUtil
+import com.android.systemui.statusbar.core.StatusBarRootModernization
 import dagger.Lazy
 import java.util.Optional
 import javax.inject.Inject
@@ -89,6 +91,7 @@ private constructor(
     private val darkIconDispatcher: DarkIconDispatcher,
     private val statusBarContentInsetsProvider: StatusBarContentInsetsProvider,
     private val lazyStatusBarShadeDisplayPolicy: Lazy<StatusBarTouchShadeDisplayPolicy>,
+    private val collapsedStatusBarFragmentLogger: CollapsedStatusBarFragmentLogger,
 ) : ViewController<PhoneStatusBarView>(view) {
 
     private lateinit var battery: BatteryMeterView
@@ -101,6 +104,7 @@ private constructor(
     private var mLastAdvertTickerViewShow = false
     private lateinit var mLastModifiedVisibility: StatusBarVisibilityModel
     private lateinit var mLastSystemVisibility: StatusBarVisibilityModel
+    private lateinit var mCollapsedStatusBarFragmentLogger: CollapsedStatusBarFragmentLogger
 
     private var mClockStyle = STYLE_CLOCK_LEFT
 
@@ -200,6 +204,7 @@ private constructor(
     }
 
     init {
+        mCollapsedStatusBarFragmentLogger = collapsedStatusBarFragmentLogger
         // These should likely be done in `onInit`, not `init`.
         mView.setTouchEventHandler(PhoneStatusBarViewTouchHandler())
         mView.setHasCornerCutoutFetcher {
@@ -412,6 +417,7 @@ private constructor(
         @DisplaySpecific private val darkIconDispatcher: DarkIconDispatcher,
         private val statusBarContentInsetsProviderStore: StatusBarContentInsetsProviderStore,
         private val lazyStatusBarShadeDisplayPolicy: Lazy<StatusBarTouchShadeDisplayPolicy>,
+        private val collapsedStatusBarFragmentLogger: CollapsedStatusBarFragmentLogger,
     ) {
         fun create(view: PhoneStatusBarView): PhoneStatusBarViewController {
             val statusBarMoveFromCenterAnimationController =
@@ -440,6 +446,7 @@ private constructor(
                 darkIconDispatcher,
                 statusBarContentInsetsProviderStore.defaultDisplay,
                 lazyStatusBarShadeDisplayPolicy,
+                collapsedStatusBarFragmentLogger,
             )
         }
     }
@@ -452,8 +459,8 @@ private constructor(
         mCollapsedStatusBarFragmentLogger.logVisibilityModel(newModel)
         mLastModifiedVisibility = newModel
 
-        if (newModel.getShowSystemInfo() != previousModel.getShowSystemInfo()) {
-            if (newModel.getShowSystemInfo()) {
+        if (newModel.showSystemInfo != previousModel.showSystemInfo) {
+            if (newModel.showSystemInfo) {
                 showEndSideContent(animate)
                 showOperatorName(animate)
             } else {
@@ -465,7 +472,7 @@ private constructor(
         // The ongoing activity chip and notification icon visibilities are intertwined, so update
         // both if either change.
         val notifsChanged =
-                newModel.getShowNotificationIcons() != previousModel.getShowNotificationIcons()
+                newModel.showNotificationIcons != previousModel.showNotificationIcons
         val ongoingActivityChanged =
                 newModel.isOngoingActivityStatusDifferentFrom(previousModel)
         val advertTickerViewShow = getAdvertSwitcherShow()
