@@ -1173,6 +1173,9 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
     // Constructing the view
     // ================================================================================
     protected void makeStatusBarView(@Nullable RegisterStatusBarResult result) {
+        CentralSurfacesImplExt.getInstance().init(this, mContext,
+                mStatusBarWindowController);
+
         updateDisplaySize(); // populates mDisplayMetrics
         updateResources();
         updateTheme();
@@ -1990,6 +1993,8 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
      * meantime, just update the things that we know change.
      */
     void updateResources() {
+        CentralSurfacesImplExt.getInstance().updateResources();
+
         // TODO: b/374267505 - we shouldn't propagate this from here. Each class should be
         //  listening at the correct configuration change. For example, shade window classes should
         //  be listening at @ShadeDisplayAware configurations (as it can be on a different display.
