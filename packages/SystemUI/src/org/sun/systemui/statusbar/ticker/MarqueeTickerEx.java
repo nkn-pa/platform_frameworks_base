@@ -5,10 +5,7 @@
 
 package org.sun.systemui.statusbar.ticker;
 
-import static org.sun.os.DebugConstants.DEBUG_TICKER;
-
 import android.content.Context;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -65,9 +62,6 @@ public class MarqueeTickerEx extends MarqueeTicker implements Animation.Animatio
 
     @Override
     public void tickerStarting() {
-        if (DEBUG_TICKER) {
-            Log.d(TAG, "tickerStarting");
-        }
         mTicking = true;
         ((DarkIconDispatcher) Dependency.get(DarkIconDispatcher.class)).addDarkReceiver(this);
         mStatusBarContents.setVisibility(View.GONE);
@@ -83,9 +77,6 @@ public class MarqueeTickerEx extends MarqueeTicker implements Animation.Animatio
 
     @Override
     public void tickerDone() {
-        if (DEBUG_TICKER) {
-            Log.d(TAG, "tickerDone");
-        }
         mTicking = false;
         ((DarkIconDispatcher) Dependency.get(DarkIconDispatcher.class)).removeDarkReceiver(this);
         mStatusBarContents.setVisibility(View.VISIBLE);
@@ -101,9 +92,6 @@ public class MarqueeTickerEx extends MarqueeTicker implements Animation.Animatio
 
     @Override
     public void tickerHalting() {
-        if (DEBUG_TICKER) {
-            Log.d(TAG, "tickerHalting");
-        }
         mTicking = false;
         if (mStatusBarContents.getVisibility() != View.VISIBLE) {
             ((DarkIconDispatcher) Dependency.get(DarkIconDispatcher.class)).removeDarkReceiver(this);

@@ -7,7 +7,6 @@ package org.sun.systemui.statusbar.ticker;
 
 import static android.graphics.PorterDuff.Mode.SRC_IN;
 
-import static org.sun.os.DebugConstants.DEBUG_TICKER;
 import static org.derpfest.view.DisplayResolutionManager.FHD_WIDTH;
 
 import android.content.Context;
@@ -102,9 +101,6 @@ public abstract class MarqueeTicker implements DarkIconDispatcher.DarkReceiver {
         }
         if (mSegments.size() > 0) {
             final Segment seg = (Segment) mSegments.get(0);
-            if (DEBUG_TICKER) {
-                Log.d(TAG, "AdvanceToNextTicker, seg=" + seg);
-            }
             if (!seg.isRemoved) {
                 mIconSwitcher.setImageDrawable(seg.icon);
                 mTextSwitcher.setText(seg.text);
@@ -171,9 +167,6 @@ public abstract class MarqueeTicker implements DarkIconDispatcher.DarkReceiver {
         final Drawable tickerIcon = n.getNotification().getSmallIcon().loadDrawable(mContext);
         final CharSequence text = n.getNotification().tickerText;
         final Segment newSegment = new Segment(n, tickerIcon, text);
-        if (DEBUG_TICKER) {
-            Log.d(TAG, "addEntry, newSegment=" + newSegment);
-        }
         int i = 0;
         while (i < mSegments.size()) {
             final Segment seg = mSegments.get(i);
@@ -406,18 +399,6 @@ public abstract class MarqueeTicker implements DarkIconDispatcher.DarkReceiver {
                 mHorDisplayCutoutRight = 0;
                 mHorScreenWidth = screenWidth;
             }
-        }
-        if (DEBUG_TICKER) {
-            Log.d(TAG, "setDisplayCutout, mIsPortrait=" + mIsPortrait
-                    + ", mIsCurved=" + mIsCurved
-                    + ", mIsCenterDisplayCutout=" + mIsCenterDisplayCutout
-                    + ", mLeftPadding=" + mLeftPadding
-                    + ", mPorDisplayCutoutLeft=" + mPorDisplayCutoutLeft
-                    + ", mPorDisplayCutoutRight=" + mPorDisplayCutoutRight
-                    + ", mPorScreenWidth=" + mPorScreenWidth
-                    + ", mHorDisplayCutoutLeft=" + mHorDisplayCutoutLeft
-                    + ", mHorDisplayCutoutRight=" + mHorDisplayCutoutRight
-                    + ", mHorScreenWidth=" + mHorScreenWidth);
         }
     }
 }

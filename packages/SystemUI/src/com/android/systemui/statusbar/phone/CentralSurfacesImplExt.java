@@ -12,7 +12,6 @@ import android.annotation.NonNull;
 import android.app.Notification;
 import android.content.Context;
 import android.service.notification.StatusBarNotification;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewStub;
 
@@ -38,7 +37,6 @@ import org.sun.systemui.statusbar.ticker.TickerEx;
 class CentralSurfacesImplExt {
 
     private static final String TAG = "CentralSurfacesImplExt";
-    private static final boolean DEBUG_TICKER = false;
 
     private static class InstanceHolder {
         private static CentralSurfacesImplExt INSTANCE = new CentralSurfacesImplExt();
@@ -157,66 +155,36 @@ class CentralSurfacesImplExt {
 
     private void tick(NotificationEntry notificationEntry, boolean firstTime) {
         if (mDemoModeController.isInDemoMode()) {
-            if (DEBUG_TICKER) {
-                Log.d(TAG, "tick, return: in demo mode");
-            }
             return;
         }
         if (!mDeviceProvisionedController.isDeviceProvisioned()) {
-            if (DEBUG_TICKER) {
-                Log.d(TAG, "tick, return: device is not provisioned");
-            }
             return;
         }
         final StatusBarNotification n = notificationEntry.getSbn();
         final int notificationUserId = n.getUserId();
         if (!mLockscreenUserManager.isCurrentProfile(notificationUserId)) {
-            if (DEBUG_TICKER) {
-                Log.d(TAG, "tick, return: not for current user");
-            }
             return;
         }
         if (mHeadsUpManager.hasPinnedHeadsUp()) {
-            if (DEBUG_TICKER) {
-                Log.d(TAG, "tick, return: already has pinned heads up");
-            }
             return;
         }
         if (mKeyguardStateController.isShowing() && !mKeyguardStateController.isOccluded()) {
-            if (DEBUG_TICKER) {
-                Log.d(TAG, "tick, return: keyguard showing and not occluded");
-            }
             return;
         }
         if (mCentralSurfacesImpl.getNotificationPanelViewController().isFullyExpanded()) {
-            if (DEBUG_TICKER) {
-                Log.d(TAG, "tick, return: notification panel is fully expanded");
-            }
             return;
         }
         if (mLockscreenUserManager.isAnyProfilePublicMode()) {
-            if (DEBUG_TICKER) {
-                Log.d(TAG, "tick, return: any of the profiles are in public mode");
-            }
             return;
         }
         if (n.getNotification().tickerText == null ||
                 n.getNotification().tickerText.toString().isEmpty()) {
-            if (DEBUG_TICKER) {
-                Log.d(TAG, "tick, return: tickerText is empty");
-            }
             return;
         }
         if (mCentralSurfacesImpl.getNotificationShadeWindowView().getWindowToken() == null) {
-            if (DEBUG_TICKER) {
-                Log.d(TAG, "tick, return: window token is null");
-            }
             return;
         }
         if ((mCentralSurfacesImpl.getDisabled1() & (DISABLE_NOTIFICATION_ICONS | DISABLE_NOTIFICATION_TICKER)) != 0) {
-            if (DEBUG_TICKER) {
-                Log.d(TAG, "tick, return: notification icon/ticker disabled");
-            }
             return;
         }
 
@@ -227,9 +195,6 @@ class CentralSurfacesImplExt {
     }
 
     void tickerHalt() {
-        if (DEBUG_TICKER) {
-            Log.d(TAG, "tickerHalt");
-        }
         if (mTicker != null) {
             mTicker.halt();
         }
@@ -262,9 +227,6 @@ class CentralSurfacesImplExt {
     private void updateSwitcherViewVisibility(boolean visible) {
         if (mSwitcherView != null) {
             visible &= !(mKeyguardStateController.isShowing() && mKeyguardStateController.isOccluded());
-            if (DEBUG_TICKER) {
-                Log.d(TAG, "updateSwitcherViewVisibility, visible=" + visible);
-            }
             mSwitcherView.updateTickerViewVisibility(visible);
         }
     }

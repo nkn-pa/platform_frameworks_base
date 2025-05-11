@@ -5,13 +5,10 @@
 
 package org.sun.systemui.statusbar.ticker;
 
-import static org.sun.os.DebugConstants.DEBUG_TICKER;
-
 import android.content.Context;
 import android.service.notification.StatusBarNotification;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.ViewSwitcher;
@@ -53,9 +50,6 @@ public class AdvertSwitcherView extends ViewSwitcher {
         if (mTickerView == null) {
             return false;
         }
-        if (DEBUG_TICKER) {
-            Log.d(TAG, "addNotification, sbn=" + sbn);
-        }
         if (mTickerView.addNotification(sbn)) {
             mCurrentNotification = sbn;
             if (mCurrentView != mTickerView && mShouldShowTicker) {
@@ -70,13 +64,7 @@ public class AdvertSwitcherView extends ViewSwitcher {
     }
 
     private void hideTickerViewIfNeed() {
-        if (DEBUG_TICKER) {
-            Log.d(TAG, "hideTickerViewIfNeed, mCurrentNotification=" + mCurrentNotification);
-        }
         if (mTickerView.isShow()) {
-            if (DEBUG_TICKER) {
-                Log.d(TAG, "hideTickerViewIfNeed, ticker is show");
-            }
             return;
         }
         mCurrentNotification = null;
@@ -88,9 +76,6 @@ public class AdvertSwitcherView extends ViewSwitcher {
     }
 
     public void hideLrcTickerView(boolean isOnGoing, String pkgName) {
-        if (DEBUG_TICKER) {
-            Log.d(TAG, "hideLrcTickerView");
-        }
         if (TextUtils.equals(pkgName, mTickerView.getCurrentPkg())) {
             updateTickerViewVisibility(isOnGoing);
             if (!isOnGoing && mCurrentNotification != null) {
@@ -100,9 +85,6 @@ public class AdvertSwitcherView extends ViewSwitcher {
     }
 
     public void removeNotification(String key) {
-        if (DEBUG_TICKER) {
-            Log.d(TAG, "removeNotification, key=" + key);
-        }
         if (mTickerView != null) {
             mTickerView.removeNotification(key);
             hideTickerViewIfNeed();
@@ -110,9 +92,6 @@ public class AdvertSwitcherView extends ViewSwitcher {
     }
 
     public void userSwitched(int newUserId) {
-        if (DEBUG_TICKER) {
-            Log.d(TAG, "userSwitched, newUserId=" + newUserId);
-        }
         if (mUserId == newUserId) {
             return;
         }
@@ -158,10 +137,6 @@ public class AdvertSwitcherView extends ViewSwitcher {
     }
 
     public void updateTickerViewVisibility(boolean visible) {
-        if (DEBUG_TICKER) {
-            Log.d(TAG, "updateTickerViewVisibility, mShouldShowTicker=" + mShouldShowTicker
-                    + ", visible=" + visible);
-        }
         if (mShouldShowTicker == visible) {
             return;
         }

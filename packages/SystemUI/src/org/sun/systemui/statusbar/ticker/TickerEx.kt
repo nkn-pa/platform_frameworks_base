@@ -9,7 +9,6 @@ import android.app.Notification.FLAG_ONLY_ALERT_ONCE
 import android.util.Log
 import androidx.collection.LruCache
 import com.android.systemui.statusbar.notification.collection.NotificationEntry
-import org.sun.os.DebugConstants.DEBUG_TICKER
 
 object TickerEx {
 
@@ -33,9 +32,6 @@ object TickerEx {
         }
         val keyInLruMap = entry.sbn.key
         if (tickerText == tickLruMap.put(keyInLruMap, tickerText)) {
-            if (DEBUG_TICKER) {
-                Log.d(TAG, "Skip ticker because of duplicate content, content=${tickerText}")
-            }
         } else {
             tickTask.run()
         }

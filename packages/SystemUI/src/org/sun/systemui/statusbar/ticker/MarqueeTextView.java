@@ -5,15 +5,12 @@
 
 package org.sun.systemui.statusbar.ticker;
 
-import static org.sun.os.DebugConstants.DEBUG_TICKER;
-
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.widget.TextView;
 
 import com.android.systemui.res.R;
@@ -79,11 +76,6 @@ public class MarqueeTextView extends TextView {
                 mCurrentScrollInterval = TICKER_MAX_SPEED_INTERVAL;
             }
             mCurrentScrollPosition++;
-            if (DEBUG_TICKER) {
-                Log.d(TAG, "mCurrentScrollInterval=" + mCurrentScrollInterval
-                        + ", mCurrentScrollPosition=" + mCurrentScrollPosition
-                        + ", mIsScrolling=" + mIsScrolling);
-            }
             if (!mIsScrolling) {
                 return;
             }
@@ -109,17 +101,11 @@ public class MarqueeTextView extends TextView {
     public void getTextWidth() {
         mTextWidth = (int) getPaint().measureText(getText().toString());
         mTextViewWidth = getWidth();
-        if (DEBUG_TICKER) {
-            Log.d(TAG, "getTextWidth, mTextWidth=" + mTextWidth + ", mTextViewWidth=" + mTextViewWidth);
-        }
     }
 
     @Override
     public void setText(CharSequence text, TextView.BufferType type) {
         super.setText(text, type);
-        if (DEBUG_TICKER) {
-            Log.d(TAG, "setText, text=" + text);
-        }
         mIsMeasured = false;
         getTextWidth();
         setEllipsize(null);

@@ -7,8 +7,6 @@ package org.sun.systemui.statusbar.ticker;
 
 import static android.graphics.PorterDuff.Mode.SRC_IN;
 
-import static org.sun.os.DebugConstants.DEBUG_TICKER;
-
 import android.app.Notification;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -17,7 +15,6 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.service.notification.StatusBarNotification;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
@@ -78,11 +75,6 @@ public class AdvertTickerView extends LinearLayout implements DarkIconDispatcher
         final Notification notification = sbn.getNotification();
         final boolean show = (notification.flags & Notification.FLAG_ALWAYS_SHOW_TICKER) != 0
                 && notification.tickerText != null && !sbn.isClearable();
-        if (DEBUG_TICKER) {
-            Log.d(TAG, "id=" + sbn.getId() + ", show=" + show
-                    + ", tickerText=" + notification.tickerText
-                    + ", key=" + sbn.getKey() + ", currentKey=" + mCurrentKey);
-        }
         if (mCurrentKey != null && !sbn.getKey().equals(mCurrentKey)) {
             return false;
         }
