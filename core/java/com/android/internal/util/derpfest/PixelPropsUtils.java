@@ -399,7 +399,7 @@ public final class PixelPropsUtils {
     }
 
     private static void spoofBuildGms(Context context) {
-        if (!SystemProperties.getBoolean(SPOOF_PIXEL_PI, true))
+        if (!SystemProperties.getBoolean(SPOOF_PIXEL_PI, false))
             return;
 
         File dataFile = new File(Environment.getDataSystemDirectory(), DATA_FILE);
@@ -462,7 +462,7 @@ public final class PixelPropsUtils {
     }
 
     public static void onEngineGetCertificateChain() {
-        if (!SystemProperties.getBoolean(SPOOF_PIXEL_PI, true))
+        if (!SystemProperties.getBoolean(SPOOF_PIXEL_PI, false))
             return;
         // Check stack for SafetyNet or Play Integrity
         if (isCallerSafetyNet() || sIsFinsky) {

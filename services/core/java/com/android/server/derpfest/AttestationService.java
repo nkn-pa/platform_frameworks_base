@@ -157,7 +157,7 @@ public final class AttestationService extends SystemService {
     private class FetchGmsCertifiedProps implements Runnable {
         @Override
         public void run() {
-            if (!SystemProperties.getBoolean(SPOOF_PIXEL_PI, true)) {
+            if (!SystemProperties.getBoolean(SPOOF_PIXEL_PI, false)) {
                 mPendingUpdate = false;
                 return;
             }
