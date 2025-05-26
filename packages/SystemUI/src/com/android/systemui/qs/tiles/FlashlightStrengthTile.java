@@ -276,14 +276,14 @@ public class FlashlightStrengthTile extends FlashlightTile implements SlideableQ
             if (mVibrator != null && Math.abs(currentRoundedPercent - mLastRoundedPercent) == 1) {
                 mVibrator.vibrate(FLASHLIGHT_MOVE_HAPTIC);
             }
-            String label = mHost.getContext().getString(R.string.quick_settings_flashlight_label);
+
+            state.secondaryLabel = "";
+            state.stateDescription = "";
+
             if (state.value) {
-                label = String.format(
-                        "%s - %s%%",
-                        mHost.getContext().getString(R.string.quick_settings_flashlight_label),
-                        currentRoundedPercent);
+                state.secondaryLabel = String.format("On - %d%%", currentRoundedPercent);
+                state.stateDescription = state.secondaryLabel;
             }
-            state.label = label;
             mLastRoundedPercent = currentRoundedPercent;
         }
     }
