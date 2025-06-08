@@ -17,6 +17,8 @@
 package com.android.systemui.statusbar.phone;
 
 import static android.app.StatusBarManager.DISABLE_HOME;
+import static android.app.StatusBarManager.DISABLE_NOTIFICATION_ICONS;
+import static android.app.StatusBarManager.DISABLE_NOTIFICATION_TICKER;
 import static android.app.StatusBarManager.WINDOW_STATE_HIDDEN;
 import static android.app.StatusBarManager.WINDOW_STATE_SHOWING;
 import static android.app.StatusBarManager.WindowVisibleState;
@@ -88,6 +90,7 @@ import android.view.MotionEvent;
 import android.view.ThreadedRenderer;
 import android.view.View;
 import android.view.ViewConfiguration;
+import android.view.ViewStub;
 import android.view.WindowInsets;
 import android.view.WindowManager;
 import android.view.WindowManagerGlobal;
@@ -222,6 +225,9 @@ import com.android.systemui.statusbar.notification.NotificationActivityStarter;
 import com.android.systemui.statusbar.notification.NotificationLaunchAnimatorControllerProvider;
 import com.android.systemui.statusbar.notification.NotificationWakeUpCoordinator;
 import com.android.systemui.statusbar.notification.collection.NotifPipeline;
+import com.android.systemui.statusbar.notification.collection.NotificationEntry;
+import com.android.systemui.statusbar.notification.collection.notifcollection.NotifCollectionListener;
+import com.android.systemui.statusbar.notification.collection.NotifCollection.CancellationReason;
 import com.android.systemui.statusbar.notification.init.NotificationsController;
 import com.android.systemui.statusbar.notification.interruption.NotificationInterruptStateProvider;
 import com.android.systemui.statusbar.notification.row.ExpandableNotificationRow;
@@ -233,6 +239,7 @@ import com.android.systemui.statusbar.phone.dagger.StatusBarPhoneModule;
 import com.android.systemui.statusbar.policy.BatteryController;
 import com.android.systemui.statusbar.policy.BrightnessMirrorController;
 import com.android.systemui.statusbar.policy.BurnInProtectionController;
+import com.android.systemui.statusbar.policy.ClockCenter;
 import com.android.systemui.statusbar.policy.ConfigurationController;
 import com.android.systemui.statusbar.policy.ConfigurationController.ConfigurationListener;
 import com.android.systemui.statusbar.policy.DeviceProvisionedController;
@@ -273,6 +280,10 @@ import javax.inject.Named;
 import javax.inject.Provider;
 
 import org.sun.systemui.statusbar.ticker.TickerController;
+import org.sun.systemui.statusbar.ticker.AdvertSwitcherView;
+import org.sun.systemui.statusbar.ticker.MarqueeTickerEx;
+import org.sun.systemui.statusbar.ticker.MarqueeTickerView;
+import org.sun.systemui.statusbar.ticker.TickerEx;
 
 /**
  * A class handling initialization and coordination between some of the key central surfaces in
@@ -653,6 +664,10 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces,
     private final ViewCaptureAwareWindowManager mViewCaptureAwareWindowManager;
 
     private final BurnInProtectionController mBurnInProtectionController;
+
+    private AdvertSwitcherView mSwitcherView;
+    private MarqueeTickerEx mTicker;
+    private NotifCollectionListener mNotifCollectionListener;
 
     /**
      * Public constructor for CentralSurfaces.
@@ -1289,13 +1304,6 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces,
     // Constructing the view
     // ================================================================================
     protected void makeStatusBarView(@Nullable RegisterStatusBarResult result) {
-        CentralSurfacesImplExt.getInstance().init(this, mContext,
-                mDemoModeController, mDeviceProvisionedController,
-                mHeadsUpManagerPhone, mKeyguardStateController,
-                mNotifPipeline, mNotificationInterruptStateProvider,
-                mLockscreenUserManager, mStatusBarWindowController,
-                mTickerController);
-
         updateDisplaySize(); // populates mDisplayMetrics
         updateResources();
         updateTheme();
@@ -1352,7 +1360,7 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces,
                         mShadeSurface.updateExpansionAndVisibility();
                         setBouncerShowingForStatusBarComponents(mBouncerShowing);
                         checkBarModes();
-                        CentralSurfacesImplExt.getInstance().initTicker(mStatusBarView);
+                        initTicker(mStatusBarView);
                         mBurnInProtectionController.setPhoneStatusBarView(mPhoneStatusBarViewController.getPhoneStatusBarView());
                         mPhoneStatusBarViewController.setBrightnessControlEnabled(mBrightnessControl);
                         mOnGoingActionProgressController =
@@ -2224,8 +2232,6 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces,
      * meantime, just update the things that we know change.
      */
     void updateResources() {
-        CentralSurfacesImplExt.getInstance().updateResources();
-
         // TODO: b/374267505 - we shouldn't propagate this from here. Each class should be
         //  listening at the correct configuration change. For example, shade window classes should
         //  be listening at @ShadeDisplayAware configurations (as it can be on a different display.
@@ -2835,7 +2841,7 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces,
 
             DejankUtils.stopDetectingBlockingIpcs(tag);
 
-            CentralSurfacesImplExt.getInstance().tickerHalt();
+            tickerHalt();
         }
 
         @Override
@@ -3523,7 +3529,7 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces,
     private final DemoMode mDemoModeCallback = new DemoMode() {
         @Override
         public void onDemoModeStarted() {
-            CentralSurfacesImplExt.getInstance().tickerHalt();
+            tickerHalt();
         }
         
         @Override
@@ -3612,5 +3618,150 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces,
     @Override
     public void wakeUpDeviceifDozing() {
         mPowerInteractor.wakeUpIfDozing("AMBIENT MUSIC", PowerManager.WAKE_REASON_GESTURE);
+    }
+
+    private void initTicker(PhoneStatusBarView statusBarView) {
+        if (mNotifCollectionListener != null) {
+            mNotifPipeline.removeCollectionListener(mNotifCollectionListener);
+        }
+        mSwitcherView = (AdvertSwitcherView) statusBarView.findViewById(R.id.status_bar_switcher);
+        mTicker = inflateTickerView(statusBarView);
+        mTicker.setStatusBarContents(statusBarView.findViewById(R.id.status_bar_contents));
+        mTicker.setSwitcherView(mSwitcherView);
+        mTicker.setCenterClockView((ClockCenter) statusBarView.findViewById(R.id.center_clock));
+        initEntryListener();
+    }
+
+    private MarqueeTickerEx inflateTickerView(PhoneStatusBarView statusBarView) {
+        final ViewStub tickerStub = (ViewStub) statusBarView.findViewById(R.id.ticker_stub);
+        if (tickerStub == null) {
+            return null;
+        }
+        final View tickerView = tickerStub.inflate();
+        final MarqueeTickerEx marqueeTicker = new MarqueeTickerEx(mContext, statusBarView);
+        marqueeTicker.setTickerView(tickerView);
+        final MarqueeTickerView tickerText = (MarqueeTickerView) statusBarView.findViewById(R.id.tickerText);
+        tickerText.setTicker(marqueeTicker);
+        statusBarView.setTickerView(tickerView);
+        return marqueeTicker;
+    }
+
+    private void initEntryListener() {
+        mNotifCollectionListener = new NotifCollectionListener() {
+            @Override
+            public void onEntryAdded(@NonNull NotificationEntry entry) {
+                if (!mTickerController.showNotificationTicker()) {
+                    return;
+                }
+                if (shouldFilterHeadsUpNotification(entry)) {
+                    return;
+                }
+                TickerEx.tickFilter(entry, false, () -> tick(entry, true));
+            }
+
+            @Override
+            public void onEntryUpdated(@NonNull NotificationEntry entry) {
+                if (!mTickerController.showNotificationTicker()) {
+                    return;
+                }
+                if (mDemoModeController.isInDemoMode()) {
+                    return;
+                }
+                if (shouldUpdateNotificationTicker(entry.getSbn())) {
+                    updateSwitcherViewVisibility(true);
+                } else {
+                    if (shouldFilterHeadsUpNotification(entry)) {
+                        return;
+                    }
+                    TickerEx.tickFilter(entry, false, () -> tick(entry, false));
+                }
+            }
+
+            @Override
+            public void onEntryRemoved(@NonNull NotificationEntry entry, @CancellationReason int reason) {
+                TickerEx.removeTickFilter(entry);
+                mTicker.removeEntry(entry.getSbn());
+                mSwitcherView.removeNotification(entry.getSbn().getKey());
+            }
+        };
+        mNotifPipeline.addCollectionListener(mNotifCollectionListener);
+    }
+
+    private void tick(NotificationEntry notificationEntry, boolean firstTime) {
+        if (mDemoModeController.isInDemoMode()) {
+            return;
+        }
+        if (!mDeviceProvisionedController.isDeviceProvisioned()) {
+            return;
+        }
+        final StatusBarNotification n = notificationEntry.getSbn();
+        final int notificationUserId = n.getUserId();
+        if (!mLockscreenUserManager.isCurrentProfile(notificationUserId)) {
+            return;
+        }
+        if (mHeadsUpManager.hasPinnedHeadsUp()) {
+            return;
+        }
+        if (mKeyguardStateController.isShowing() && !mKeyguardStateController.isOccluded()) {
+            return;
+        }
+        if (getNotificationPanelViewController().isFullyExpanded()) {
+            return;
+        }
+        if (mLockscreenUserManager.isAnyProfilePublicMode()) {
+            return;
+        }
+        if (n.getNotification().tickerText == null ||
+                n.getNotification().tickerText.toString().isEmpty()) {
+            return;
+        }
+        if (getNotificationShadeWindowView().getWindowToken() == null) {
+            return;
+        }
+        if ((getDisabled1() & (DISABLE_NOTIFICATION_ICONS | DISABLE_NOTIFICATION_TICKER)) != 0) {
+            return;
+        }
+
+        mTicker.halt();
+        if (!mSwitcherView.addNotification(n)) {
+            mTicker.addEntry(n);
+        }
+    }
+
+    void tickerHalt() {
+        if (mTicker != null) {
+            mTicker.halt();
+        }
+        updateSwitcherViewVisibility(false);
+    }
+
+    private boolean shouldFilterHeadsUpNotification(NotificationEntry entry) {
+        if (mHeadsUpManager.shouldHeadsUpBecomePinned(entry) &&
+                mNotificationInterruptStateProvider.shouldHeadsUp(entry) &&
+                !mHeadsUpManager.isSnoozed(entry.getSbn().getPackageName())) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean shouldUpdateNotificationTicker(StatusBarNotification sbn) {
+        if (sbn == null || mSwitcherView == null) {
+            return false;
+        }
+        final Notification notification = sbn.getNotification();
+        if (notification == null) {
+            return false;
+        }
+        if (!mSwitcherView.addNotification(sbn)) {
+            return false;
+        }
+        return (notification.flags & Notification.FLAG_ONLY_UPDATE_TICKER) != 0;
+    }
+
+    private void updateSwitcherViewVisibility(boolean visible) {
+        if (mSwitcherView != null) {
+            visible &= !(mKeyguardStateController.isShowing() && mKeyguardStateController.isOccluded());
+            mSwitcherView.updateTickerViewVisibility(visible);
+        }
     }
 }
