@@ -3613,11 +3613,6 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces,
     }
 
     @Override
-    public ShadeViewController getNotificationPanelViewController() {
-        return mShadeSurface;
-    }
-
-    @Override
     public void wakeUpDeviceifDozing() {
         mPowerInteractor.wakeUpIfDozing("AMBIENT MUSIC", PowerManager.WAKE_REASON_GESTURE);
     }
