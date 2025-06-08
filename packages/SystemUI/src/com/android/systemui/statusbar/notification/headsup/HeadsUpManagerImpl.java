@@ -529,8 +529,8 @@ public class HeadsUpManagerImpl
         return 0;
     }
 
-    @VisibleForTesting
-    protected boolean shouldHeadsUpBecomePinned(@NonNull NotificationEntry entry) {
+    @Override
+    public boolean shouldHeadsUpBecomePinned(NotificationEntry entry) {
         boolean pin = mStatusBarState == StatusBarState.SHADE && !mIsShadeOrQsExpanded;
         if (SceneContainerFlag.isEnabled()) {
             pin |= mIsQsExpanded;

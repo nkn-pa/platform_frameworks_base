@@ -101,6 +101,11 @@ interface HeadsUpManager : Dumpable {
     fun isSticky(key: String?): Boolean
 
     /**
+     * Returns whether the given notification entry should become pinned.
+     */
+    fun shouldHeadsUpBecomePinned(entry: NotificationEntry): Boolean
+
+    /**
      * Returns the value of the tracking-heads-up flag. See the doc of {@code setTrackingHeadsUp} as
      * well.
      */
@@ -269,6 +274,8 @@ class HeadsUpManagerEmptyImpl @Inject constructor() : HeadsUpManager {
     override fun isSnoozed(packageName: String) = false
 
     override fun isSticky(key: String?) = false
+
+    override fun shouldHeadsUpBecomePinned(entry: NotificationEntry) = false
 
     override fun isTrackingHeadsUp() = false
 
