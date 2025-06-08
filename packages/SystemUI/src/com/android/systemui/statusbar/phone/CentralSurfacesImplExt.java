@@ -50,7 +50,7 @@ class CentralSurfacesImplExt {
     private Context mContext;
     private DemoModeController mDemoModeController;
     private DeviceProvisionedController mDeviceProvisionedController;
-    private HeadsUpManagerPhone mHeadsUpManager;
+    private HeadsUpManager mHeadsUpManager;
     private KeyguardStateController mKeyguardStateController;
     private NotifCollectionListener mNotifCollectionListener;
     private NotifPipeline mNotifPipeline;
@@ -66,7 +66,7 @@ class CentralSurfacesImplExt {
             Context context,
             DemoModeController demoModeController,
             DeviceProvisionedController deviceProvisionedController,
-            HeadsUpManagerPhone headsUpManager,
+            HeadsUpManager headsUpManager,
             KeyguardStateController keyguardStateController,
             NotifPipeline notifPipeline,
             NotificationInterruptStateProvider notificationInterruptStateProvider,

@@ -438,7 +438,6 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces,
     private final KeyguardBypassController mKeyguardBypassController;
     private final KeyguardStateController mKeyguardStateController;
     private final HeadsUpManager mHeadsUpManager;
-    private final HeadsUpManagerPhone mHeadsUpManagerPhone;
     private final ShadeTouchableRegionManager mShadeTouchableRegionManager;
     private final FalsingCollector mFalsingCollector;
     private final FalsingManager mFalsingManager;
@@ -680,7 +679,6 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces,
             KeyguardBypassController keyguardBypassController,
             KeyguardStateController keyguardStateController,
             HeadsUpManager headsUpManager,
-            HeadsUpManagerPhone headsUpManagerPhone,
             FalsingManager falsingManager,
             FalsingCollector falsingCollector,
             BroadcastDispatcher broadcastDispatcher,
@@ -793,7 +791,6 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces,
         mKeyguardBypassController = keyguardBypassController;
         mKeyguardStateController = keyguardStateController;
         mHeadsUpManager = headsUpManager;
-        mHeadsUpManagerPhone = headsUpManagerPhone;
         mBackActionInteractor = backActionInteractor;
         mKeyguardIndicationController = keyguardIndicationController;
         mShadeTouchableRegionManager = shadeTouchableRegionManager;
