@@ -1748,7 +1748,7 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces,
         Trace.endSection();
     }
 
-    protected ShadeViewController getShadeViewController() {
+    public ShadeViewController getShadeViewController() {
         return mShadeSurface;
     }
 
