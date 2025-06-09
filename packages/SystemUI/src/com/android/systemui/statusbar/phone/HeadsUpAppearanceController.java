@@ -154,7 +154,7 @@ public class HeadsUpAppearanceController extends ViewController<HeadsUpStatusBar
         mClockView = phoneStatusBarViewController.getClockView();
         mOperatorNameViewOptional = operatorNameViewOptional;
         mDarkIconDispatcher = darkIconDispatcher;
-        mLeftLogo = statusBarView.findViewById(R.id.statusbar_logo);
+        mLeftLogo = mPhoneStatusBarViewController.getPhoneStatusBarView().findViewById(R.id.statusbar_logo);
 
         mView.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
             @Override
