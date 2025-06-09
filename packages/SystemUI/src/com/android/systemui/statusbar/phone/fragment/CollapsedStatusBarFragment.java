@@ -180,6 +180,8 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
     private int mClockStyle;
     private boolean mShowClock = true;
 
+    private View mLeftLogo;
+
     private final class SettingsObserver extends ContentObserver {
 
         SettingsObserver(Handler handler) {
@@ -414,6 +416,7 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
         mPrimaryOngoingActivityChip = mStatusBar.findViewById(R.id.ongoing_activity_chip_primary);
         mSecondaryOngoingActivityChip =
                 mStatusBar.findViewById(R.id.ongoing_activity_chip_secondary);
+        mLeftLogo = mStatusBar.findViewById(R.id.statusbar_logo);
         if (!StatusBarRootModernization.isEnabled()) {
             mCenterClockLayout = (LinearLayout) mStatusBar.findViewById(R.id.center_clock_layout);
             mRightClock = mStatusBar.findViewById(R.id.right_clock);
@@ -887,12 +890,14 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
 
     public void hideNotificationIconArea(boolean animate) {
         StatusBarRootModernization.assertInLegacyMode();
+        animateHide(mLeftLogo, animate);
         animateHide(mNotificationIconAreaInner, animate);
         animateHide(mCenterClockLayout, animate, true);
     }
 
     public void showNotificationIconArea(boolean animate) {
         StatusBarRootModernization.assertInLegacyMode();
+        animateShow(mLeftLogo, animate);
         animateShow(mNotificationIconAreaInner, animate);
         animateShow(mCenterClockLayout, animate);
     }
