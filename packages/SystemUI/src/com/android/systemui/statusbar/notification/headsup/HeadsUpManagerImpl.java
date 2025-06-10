@@ -531,6 +531,16 @@ public class HeadsUpManagerImpl
 
     @Override
     public boolean shouldHeadsUpBecomePinned(NotificationEntry entry) {
+        // Don't pin if the entry is null or has no row
+        if (entry == null || entry.getRow() == null) {
+            return false;
+        }
+
+        // Don't pin if the notification is already removed
+        if (entry.isRemoved()) {
+            return false;
+        }
+
         boolean pin = mStatusBarState == StatusBarState.SHADE && !mIsShadeOrQsExpanded;
         if (SceneContainerFlag.isEnabled()) {
             pin |= mIsQsExpanded;
