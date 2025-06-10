@@ -269,11 +269,13 @@ public class HeadsUpAppearanceController extends ViewController<HeadsUpStatusBar
                     mLeftLogo.setVisibility(View.VISIBLE);
                 }
                 if (!StatusBarRootModernization.isEnabled()) {
-                    Clock clockView = (Clock) mClockView;
-                    if (clockView.getClockStyle() == STYLE_CLOCK_LEFT && clockView.getShowClock()) {
-                        show(mClockView);
-                    } else {
-                        mClockView.setVisibility(View.GONE);
+                    if (mClockView != null) {
+                        Clock clockView = (Clock) mClockView;
+                        if (clockView.getClockStyle() == STYLE_CLOCK_LEFT && clockView.getShowClock()) {
+                            show(mClockView);
+                        } else {
+                            mClockView.setVisibility(View.GONE);
+                        }
                     }
                 }
                 mOperatorNameViewOptional.ifPresent(this::show);
