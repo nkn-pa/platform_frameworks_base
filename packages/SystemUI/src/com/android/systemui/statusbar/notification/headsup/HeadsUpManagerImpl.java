@@ -541,14 +541,6 @@ public class HeadsUpManagerImpl
             return false;
         }
 
-        // Don't pin notifications that use ticker text to prevent conflicts
-        if (entry.getSbn() != null && entry.getSbn().getNotification() != null) {
-            Notification notification = entry.getSbn().getNotification();
-            if (notification.tickerText != null && !notification.tickerText.toString().isEmpty()) {
-                return false;
-            }
-        }
-
         boolean pin = mStatusBarState == StatusBarState.SHADE && !mIsShadeOrQsExpanded;
         if (SceneContainerFlag.isEnabled()) {
             pin |= mIsQsExpanded;
