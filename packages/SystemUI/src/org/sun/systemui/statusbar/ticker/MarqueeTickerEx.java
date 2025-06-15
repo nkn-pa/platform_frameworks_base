@@ -64,44 +64,60 @@ public class MarqueeTickerEx extends MarqueeTicker implements Animation.Animatio
     public void tickerStarting() {
         mTicking = true;
         ((DarkIconDispatcher) Dependency.get(DarkIconDispatcher.class)).addDarkReceiver(this);
-        mStatusBarContents.setVisibility(View.GONE);
-        mTickerView.setVisibility(View.VISIBLE);
-        mStatusBarContents.startAnimation(loadAnim(R.anim.marquee_fade_out, null));
-        mTickerView.startAnimation(loadAnim(R.anim.marquee_push_down_in, null));
-        if (mCenterClockView.isCenterClock()) {
+        if (mStatusBarContents != null) {
+            mStatusBarContents.setVisibility(View.GONE);
+            mStatusBarContents.startAnimation(loadAnim(R.anim.marquee_fade_out, null));
+        }
+        if (mTickerView != null) {
+            mTickerView.setVisibility(View.VISIBLE);
+            mTickerView.startAnimation(loadAnim(R.anim.marquee_push_down_in, null));
+        }
+        if (mCenterClockView != null && mCenterClockView.isCenterClock()) {
             mCenterClockView.setVisibility(View.GONE);
             mCenterClockView.startAnimation(loadAnim(R.anim.marquee_fade_out, null));
         }
-        mCenterClockView.setVisibilityLocked(true);
+        if (mCenterClockView != null) {
+            mCenterClockView.setVisibilityLocked(true);
+        }
     }
 
     @Override
     public void tickerDone() {
         mTicking = false;
         ((DarkIconDispatcher) Dependency.get(DarkIconDispatcher.class)).removeDarkReceiver(this);
-        mStatusBarContents.setVisibility(View.VISIBLE);
-        mTickerView.setVisibility(View.GONE);
-        mStatusBarContents.startAnimation(loadAnim(R.anim.marquee_fade_in, null));
-        mTickerView.startAnimation(loadAnim(R.anim.marquee_push_up_out, this));
-        mCenterClockView.setVisibilityLocked(false);
-        if (!mSwitcherView.isShow() && mCenterClockView.isCenterClock()) {
-            mCenterClockView.setVisibility(View.VISIBLE);
-            mCenterClockView.startAnimation(loadAnim(R.anim.marquee_fade_in, null));
+        if (mStatusBarContents != null) {
+            mStatusBarContents.setVisibility(View.VISIBLE);
+            mStatusBarContents.startAnimation(loadAnim(R.anim.marquee_fade_in, null));
+        }
+        if (mTickerView != null) {
+            mTickerView.setVisibility(View.GONE);
+            mTickerView.startAnimation(loadAnim(R.anim.marquee_push_up_out, this));
+        }
+        if (mCenterClockView != null) {
+            mCenterClockView.setVisibilityLocked(false);
+            if (!mSwitcherView.isShow() && mCenterClockView.isCenterClock()) {
+                mCenterClockView.setVisibility(View.VISIBLE);
+                mCenterClockView.startAnimation(loadAnim(R.anim.marquee_fade_in, null));
+            }
         }
     }
 
     @Override
     public void tickerHalting() {
         mTicking = false;
-        if (mStatusBarContents.getVisibility() != View.VISIBLE) {
+        if (mStatusBarContents != null && mStatusBarContents.getVisibility() != View.VISIBLE) {
             ((DarkIconDispatcher) Dependency.get(DarkIconDispatcher.class)).removeDarkReceiver(this);
             mStatusBarContents.setVisibility(View.VISIBLE);
-            mTickerView.setVisibility(View.GONE);
+            if (mTickerView != null) {
+                mTickerView.setVisibility(View.GONE);
+            }
             mStatusBarContents.startAnimation(loadAnim(android.R.anim.fade_in, null));
-            mCenterClockView.setVisibilityLocked(false);
-            if (!mSwitcherView.isShow() && mCenterClockView.isCenterClock()) {
-                mCenterClockView.setVisibility(View.VISIBLE);
-                mCenterClockView.startAnimation(loadAnim(R.anim.marquee_fade_in, null));
+            if (mCenterClockView != null) {
+                mCenterClockView.setVisibilityLocked(false);
+                if (!mSwitcherView.isShow() && mCenterClockView.isCenterClock()) {
+                    mCenterClockView.setVisibility(View.VISIBLE);
+                    mCenterClockView.startAnimation(loadAnim(R.anim.marquee_fade_in, null));
+                }
             }
         }
     }
