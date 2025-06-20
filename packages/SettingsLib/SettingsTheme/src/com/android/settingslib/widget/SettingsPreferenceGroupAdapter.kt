@@ -55,7 +55,13 @@ open class SettingsPreferenceGroupAdapter(preferenceGroup: PreferenceGroup) :
         "com.android.settings.accessibility.TextReadingPreviewPreference",
         "com.android.settings.accessibility.TextReadingResetPreference",
         "com.android.settings.fuelgauge.batteryusage.TextViewPreference",
-        "com.android.settingslib.widget.SettingsSpinnerPreference"
+        "com.android.settingslib.widget.SettingsSpinnerPreference",
+        "org.derpfest.ui.preference.DerpFestCardDarkModePreferenceBase",
+        "org.derpfest.ui.preference.DerpFestCardPreference",
+        "org.derpfest.ui.preference.DerpFestCardSwitchPreference",
+        "org.derpfest.ui.preference.DerpFestSystemThemePreferenceBase",
+        "org.derpfest.customizations.preference.SystemThemePreference",
+        "org.derpfest.customizations.preference.DarkModeCardPreference"
     )
 
     init {
