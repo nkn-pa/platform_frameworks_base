@@ -6939,6 +6939,12 @@ public final class Settings {
         public static final String ISLAND_NOTIFICATION_NOW_PLAYING = "island_notification_now_playing";
 
         /**
+         * Whether to disable Bluetooth battery level
+         * @hide
+         */
+        public static final String BLUETOOTH_BATTERY_LEVEL = "bluetooth_battery_level";
+
+        /**
          * Keys we no longer back up under the current schema, but want to continue to
          * process when restoring historical backup datasets.
          *
